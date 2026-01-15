@@ -19,6 +19,53 @@ class _IntroPageState extends State<IntroPage> {
     super.dispose();
   }
 
+  Widget _buildPage({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required List<Color> colors,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 120, color: Colors.white),
+              const SizedBox(height: 30),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white70,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,32 +75,40 @@ class _IntroPageState extends State<IntroPage> {
             controller: _controller,
             onPageChanged: (index) {
               setState(() {
-                onLastPage = (index == 2);
+                onLastPage = index == 2;
               });
             },
             children: [
-              Container(
-                color: Colors.yellow,
-                child: Image.asset('assets/images/sleep.png'),
+              _buildPage(
+                icon: Icons.edit_note,
+                title: "Plan Your Day",
+                subtitle: "Organize your daily activities easily",
+                colors: [Colors.blue, Colors.blueAccent],
               ),
-              Container(
-                color: Colors.yellow,
-                child: Image.asset('assets/images/exercise.png'),
+              _buildPage(
+                icon: Icons.check_circle_outline,
+                title: "Stay Productive",
+                subtitle: "Track completed and pending tasks",
+                colors: [Colors.purple, Colors.deepPurple],
               ),
-              Container(
-                color: Colors.yellow,
-                child: Image.asset('assets/images/work.png'),
+              _buildPage(
+                icon: Icons.alarm_on,
+                title: "Achieve More",
+                subtitle: "Manage time and reach your goals",
+                colors: [Colors.green, Colors.teal],
               ),
             ],
           ),
-          Align(
-            alignment: const Alignment(0, 0.85),
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (_) => const TasksPage(),
@@ -61,44 +116,40 @@ class _IntroPageState extends State<IntroPage> {
                     );
                   },
                   child: const Text(
-                    'skip',
-                    style: TextStyle(color: Colors.grey),
+                    "SKIP",
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
                 SmoothPageIndicator(
                   controller: _controller,
                   count: 3,
-                  effect: const SwapEffect(
-                    dotColor: Colors.blue,
+                  effect: const WormEffect(
+                    dotColor: Colors.white38,
                     activeDotColor: Colors.white,
-                    type: SwapType.yRotation,
                   ),
                 ),
                 onLastPage
-                    ? GestureDetector(
-                        onTap: () {
-                          Navigator.push(
+                    ? ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (_) => const TasksPage(),
                             ),
                           );
                         },
-                        child: const Text(
-                          'done',
-                          style: TextStyle(color: Colors.grey),
-                        ),
+                        child: const Text("START"),
                       )
-                    : GestureDetector(
-                        onTap: () {
+                    : IconButton(
+                        onPressed: () {
                           _controller.nextPage(
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeIn,
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
                           );
                         },
-                        child: const Icon(
-                          Icons.arrow_forward,
-                          color: Colors.grey,
+                        icon: const Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white,
                         ),
                       ),
               ],
