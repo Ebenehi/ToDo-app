@@ -160,8 +160,3 @@ class _IntroPageState extends State<IntroPage> {
     );
   }
 }
-
-
-
-
-
