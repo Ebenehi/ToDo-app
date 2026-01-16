@@ -1,62 +1,40 @@
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/task.dart';
 
 class TasksPage extends StatefulWidget {
-  const TasksPage({Key? key}) : super(key: key);
+  const TasksPage({super.key});
 
   @override
   State<TasksPage> createState() => _TasksPageState();
 }
 
 class _TasksPageState extends State<TasksPage> {
-  double? _deviceHeight, _deviceWidth;
-  String? content;
   Box? _box;
 
   @override
   Widget build(BuildContext context) {
-    _deviceHeight = MediaQuery.of(context).size.height;
-    _deviceWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: _deviceHeight! * 0.1,
-        title: const Text("Daily Planner"),
+        backgroundColor: Colors.blueGrey.shade900,
+        title: const Row(
+          children: [
+            Icon(Icons.event_note, size: 22),
+            SizedBox(width: 8),
+            Text(
+              "Daily Planner",
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
       ),
       body: _tasksWidget(),
       floatingActionButton: FloatingActionButton(
-        onPressed: displayTaskPop,
+        backgroundColor: Colors.blueGrey.shade900,
+        onPressed: _showAddTaskDialog,
         child: const Icon(Icons.add),
       ),
-    );
-  }
-
-  Widget _todoList() {
-    List tasks = _box!.values.toList();
-
-    return ListView.builder(
-      itemCount: tasks.length,
-      itemBuilder: (BuildContext context, int index) {
-        var task = Task.fromMap(tasks[index]);
-
-        return ListTile(
-          title: Text(task.todo),
-          subtitle: Text(task.timeStamp.toString()),
-          trailing: task.done
-              ? const Icon(Icons.check_box_outlined, color: Colors.greenAccent)
-              : const Icon(Icons.check_box_outline_blank),
-          onTap: () {
-            task.done = !task.done;
-            _box!.putAt(index, task.toMap());
-            setState(() {});
-          },
-          onLongPress: () {
-            _box!.deleteAt(index);
-            setState(() {});
-          },
-        );
-      },
     );
   }
 
@@ -66,42 +44,121 @@ class _TasksPageState extends State<TasksPage> {
       builder: (BuildContext context, AsyncSnapshot snapshot) {
         if (snapshot.hasData) {
           _box = snapshot.data;
-          return _todoList();
-        } else {
-          return const Center(child: CircularProgressIndicator());
+          return _taskList();
         }
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }
 
-  void displayTaskPop() {
-    showDialog(
-      context: context,
-      builder: (BuildContext _context) {
-        return AlertDialog(
-          title: const Text("Add a ToDo"),
-          content: TextField(
-            onSubmitted: (value) {
-              if (value.isNotEmpty) {
-                var task = Task(
-                  todo: value,
-                  timeStamp: DateTime.now(),
-                  done: false,
-                );
+  Widget _taskList() {
+    final tasks = _box!.values.toList();
 
-                _box!.add(task.toMap());
+    if (tasks.isEmpty) {
+      return const Center(
+        child: Text(
+          "Your task list is empty.\nAdd a task to get started.",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
 
-                setState(() {
-                  Navigator.pop(context);
-                });
-              }
-            },
-            onChanged: (value) {
-              content = value;
-            },
+    return ListView.builder(
+      padding: const EdgeInsets.all(10),
+      itemCount: tasks.length,
+      itemBuilder: (context, index) {
+        final task = Task.fromMap(tasks[index]);
+
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ListTile(
+            leading: Checkbox(
+              value: task.done,
+              onChanged: (value) {
+                task.done = value!;
+                _box!.putAt(index, task.toMap());
+                setState(() {});
+              },
+            ),
+            title: Text(
+              task.todo,
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                decoration:
+                    task.done ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            subtitle: Text(
+              task.timeStamp.toLocal().toString(),
+              style: const TextStyle(fontSize: 12),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: () {
+                _box!.deleteAt(index);
+                setState(() {});
+              },
+            ),
           ),
         );
       },
     );
+  }
+
+  void _showAddTaskDialog() {
+    String text = "";
+
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text("New Task"),
+          content: TextField(
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: "What do you need to do?",
+            ),
+            onChanged: (value) => text = value,
+            onSubmitted: (_) => _addTask(text),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () => _addTask(text),
+              child: const Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _addTask(String text) {
+    if (text.trim().isEmpty) return;
+
+    final task = Task(
+      todo: text,
+      timeStamp: DateTime.now(),
+      done: false,
+    );
+
+    _box!.add(task.toMap());
+    Navigator.pop(context);
+    setState(() {});
   }
 }
